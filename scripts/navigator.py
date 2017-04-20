@@ -118,9 +118,9 @@ def handle_navigation(request):
 	#nx.draw_networkx_nodes(G, pos=pos, node_color=node_colors)
 	#nx.draw_networkx_edges(G, pos=pos)
 	#plt.show()
-    print "Dit is een test..."
-    print rd_route[1][0]
-    return rd_route[1][0] - 628550, rd_route[1][1] - 5803351, z, w
+    #print "Dit is een test..."
+    #print rd_route[1][0]
+    #return rd_route[1][0] - 628550, rd_route[1][1] - 5803351, z, w
 
 def navigation_server():
 	rospy.init_node('navigation_server')

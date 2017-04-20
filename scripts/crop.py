@@ -78,20 +78,26 @@ def crop(cropped):
 	cropped[1][1] += 100
 	cropped[0][1] -= 100
 	
-	top = (5806351 - cropped[1][1]) * 2
-	bottom = (5806351 - cropped[0][1]) * 2
-	left = (625550 - cropped[1][0]) * -2
-	right = (625550 - cropped[0][0]) * -2	
+	top = (5808303 - cropped[1][1]) * 2    	
+	bottom = (5808303 - cropped[0][1]) * 2
+	left = (632457 - cropped[1][0]) * -2
+	right = (632457 - cropped[0][0]) * -2
 
-	#print "INFO: ", int(left), int(top), int(right), int(bottom)
+	#kaart parameters
+	#top = (5806351 - cropped[1][1]) * 2    	
+	#bottom = (5806351 - cropped[0][1]) * 2
+	#left = (625550 - cropped[1][0]) * -2
+	#right = (625550 - cropped[0][0]) * -2	
+
+	print "INFO left: ", int(left), "   right:  ", int(right), "   top: ", int(top), "   bottom: ", int(bottom)
 	
 	cropped_example = original.crop((int(left), int(top), int(right), int(bottom)))
 	cropped_example.save(project_path +"/images/amsterdam.png")
 
 	map_data["image"] = "amsterdam.png"
 
-	height = -3000 + (6000 - int(bottom) / 2) 
-	width = -3000 + int(left) / 2
+	height = -5000 + (10000 - int(bottom) / 2) 
+	width = -5000 + int(left) / 2
 
 	map_data["origin"] = [width, height, 0.0]
 	with open(project_path + "/config/amsterdam.yaml", "w") as f:
@@ -107,8 +113,8 @@ def cropResultingPath(coordinates):
 		x,y = p(coordinate[1], coordinate[0])
 		cropped.append([x, y])
 
-	locate[0][1] = -3000 + (6000 - (5803351 - cropped[0][1])) 	#Magic
-	locate[0][0] = -3000 + ((628550 - cropped[0][0]) * -1)		#Magic
+	locate[0][1] = -5000 + (10000 - (5803351 - cropped[0][1])) 	#Magic
+	locate[0][0] = -5000 + ((628550 - cropped[0][0]) * -1)		#Magic
 	
 
 	position, cropped = arange(cropped)
