@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  common_msgs
   message_generation
 )
 
@@ -54,7 +55,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate services in the 'srv' folder
 add_service_files(
   FILES
-  AddTwoInts.srv
+  FindPathAmsterdamCanals.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -68,6 +69,7 @@ add_service_files(
 generate_messages(
   DEPENDENCIES
   std_msgs
+  common_msgs
 )
 
 ################################################
