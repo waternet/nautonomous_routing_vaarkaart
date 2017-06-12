@@ -8,7 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
-  common_msgs
+  geometry_msgs
   message_generation
 )
 
@@ -69,7 +69,7 @@ add_service_files(
 generate_messages(
   DEPENDENCIES
   std_msgs
-  common_msgs
+  geometry_msgs
 )
 
 ################################################
