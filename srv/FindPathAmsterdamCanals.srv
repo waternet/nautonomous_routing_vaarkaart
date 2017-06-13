@@ -1,5 +1,5 @@
-float64 goalLatitude
-float64 goalLongitude
+float64 goalEasting
+float64 goalNorthing
 ---
 geometry_msgs/Point[] pathCoordinates
 

@@ -1,5 +1,0 @@
-<launch>
-
-	<node name="navigator" pkg="nautonomous_navigation_pathfinder" type="path_finder.py"  output="screen" />
-
-</launch>

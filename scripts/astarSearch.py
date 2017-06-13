@@ -12,10 +12,9 @@ import urllib
 import os
 
 project_path = os.path.abspath(os.path.join(os.path.split(__file__)[0], os.pardir))
-
-with open(project_path + '/data/intersections.json') as data_file:    
-    data = json.load(data_file)
  
+with open(project_path + '/data/intersections.json') as data_file:    
+    intersection_data = json.load(data_file)
 #with open('/home/wiebe/ros_workspace/src/WaternetNautonomous/WaternetNautonomousNavigation/navigator/scripts/traffic.json') as data_file:    
 #    traffic = json.load(data_file)
 
@@ -26,6 +25,7 @@ traffic = json.loads(response.read())
 #in first en second adressen van twee gekoppelde nodes. 
 # out traffic waarde.
 def amount(first, second):
+    
     for item in data:
         if item["id"] == first:
             l1 = item["adjacent"]
@@ -117,7 +117,8 @@ def aStarSearch(G, problem, goal):
         #raw_input("Press Enter to continue...")
         for option in G.neighbors(node.state):
             #value = euclideanDistance(node.state, option)*1000
-            child = Node(option, node, ((node.pathCost + euclideanDistance(option, goal)) + amount(option, node.state))) #initialise node with actual distance, successor pathcost + entire path cost
+            # removed traffic cost temp. TODO : amount(option, node.state)
+            child = Node(option, node, ((node.pathCost + euclideanDistance(option, goal)))) #initialise node with actual distance, successor pathcost + entire path cost
 
             foundExplored = False
             for closed_list_item in explored:
@@ -133,11 +134,12 @@ def aStarSearch(G, problem, goal):
 
                 if(open_list_item[2].state == child.state):
                     foundFrontier = True
-                    frontierPathCost = ((open_list_item[2].pathCost + euclideanDistance(open_list_item[2].state, goal)) + amount(open_list_item[2].state, open_list_item[2].parent.state))
+                    #  + amount(open_list_item[2].state, open_list_item[2].parent.state)
+                    frontierPathCost = ((open_list_item[2].pathCost + euclideanDistance(open_list_item[2].state, goal)))
                     break
 
-            
-            distance = ((child.pathCost + euclideanDistance(child.state, goal)) + amount(child.state, child.parent.state))
+            #  + amount(child.state, child.parent.state)
+            distance = ((child.pathCost + euclideanDistance(child.state, goal)))
 
             if(not foundFrontier):
                 frontier.push(child, distance)

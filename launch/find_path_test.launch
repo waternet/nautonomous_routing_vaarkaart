@@ -1,0 +1,8 @@
+<launch>
+	<arg name="debug" value="True"/>
+	
+	<node name="navigator" pkg="nautonomous_navigation_pathfinder" type="path_finder.py"  output="screen" >
+ 		<param name="debug" value="$(arg debug)"/>
+	</node>
+
+</launch>
