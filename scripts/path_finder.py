@@ -15,10 +15,9 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 from vertex import Vertex
-from geometry_msgs.msg import Point, Quaternion
+from geometry_msgs.msg import Pose2D
 from nautonomous_navigation_pathfinder.srv import *
 from astarSearch import *
-from crop import *
 from orientation import orientation
 from sensor_msgs.msg import NavSatFix
 
@@ -28,6 +27,7 @@ positionNorthing = 0
 positionEasting = 0
 
 debug = False # change this to see example application
+test = False
 
 G = nx.Graph()
 v = []
@@ -38,51 +38,6 @@ def gpsFixCallback(data):
 	positionEasting = data.easting
 
 	print (positionNorthing, positionEasting)
-
-# def findClosestWaypoints(waypoint):
-# 	closestNode = None
-# 	closestDistance = sys.maxint
-    
-# 	# Check each node and see which one is closest to the given waypoint.
-# 	for node in G.nodes():
-# 		distance = euclideanDistance(waypoint, node)
-# 		if distance == 0.0:
-# 			return waypoint
-# 		elif(distance < closestDistance):
-# 			closestDistance = distance
-# 			closestNode = node
-
-# 	# When no closest node can be found, then return false.
-# 	if not closestNode:
-# 		return False
-
-# 	# Keep a array of the closest nodes.
-# 	closestNodes = [closestNode]
-
-# 	nextNode = None    
-# 	nextDistance = sys.maxint
-
-# 	# For each edge check if it is connected to the closest node
-# 	for edge in G.edges():
-
-# 		if(closestNode in edge):
-# 			edgeNode = None
-# 			if(closestNode == edge[0]):
-# 				edgeNode = edge[1]
-# 			elif(closestNode == edge[1]):
-# 				edgeNode = edge[0]              
-
-# 			distance = euclideanDistance(edgeNode, waypoint)
-# 			if(distance < nextDistance):
-# 				nextDistance = distance
-# 				nextNode = edgeNode
-
-# 	if(nextNode == 0):
-# 		return False
-
-# 	closestNodes.append(nextNode)
-
-# 	return closestNodes
 
 def get_closest_edge(goal_x, goal_y):
 	
@@ -142,26 +97,42 @@ def get_closest_edge(goal_x, goal_y):
 			closestEdge = edge
 			closestDistance = totalDistance
 
-	print "ClosestEdge: " + str(closestEdge)
-	print "ClosestDistance: " + str(closestDistance)
+	#print "ClosestEdge: " + str(closestEdge)
+	#print "ClosestDistance: " + str(closestDistance)
 
 	return closestEdge
 
+def getTrafficId(edge):
+	#print "edge: " + str(edge)
+	l1 = 0
+	l2 = 0
+	for node in v:
+		if node.id == edge[0]:
+			l1 = node.adjacent
+		elif node.id == edge[1]:
+			l2 = node.adjacent
+	#print str(l1) + " "  + str(l2)
+	return list(set(l1).intersection(l2))[0]
 
 def find_path(request):
-
+	global positionEasting
+	global positionNorthing
 
 	if debug:
-		randomStart = map(float,random.choice(G.nodes()).split(","))
-		positionEasting = randomStart[0]
-		positionNorthing = randomStart[1]
+		randomStartEdge = random.choice(G.edges())
+		firstRandomStartNode = map(float,randomStartEdge[0].split(","))
+		secondRandomStartNode = map(float,randomStartEdge[1].split(","))
+
+		positionEasting = firstRandomStartNode[0] #(firstRandomStartNode[0] + secondRandomStartNode[0]) / 2
+		positionNorthing = firstRandomStartNode[1] #(firstRandomStartNode[1] + secondRandomStartNode[1]) / 2
+	elif test:
+		positionEasting = request.testStartEasting
+		positionNorthing = request.testStartNorthing
 
 	start = str(positionEasting) + "," + str(positionNorthing)
-
 	boatEdge = get_closest_edge(positionEasting, positionNorthing)
 
 	goal = str(request.goalEasting) + "," + str(request.goalNorthing)
-
 	goalEdge = get_closest_edge(request.goalEasting, request.goalNorthing)
 
 	print "Find path at " + start + " to " + goal
@@ -177,81 +148,142 @@ def find_path(request):
 			shortestDistance = distance
 			shortestResult = result
 
-			shortestResult.insert(0, start)
-			shortestResult.insert(1, boatEdge[(i/2)])
+			#print "RESULT: " + str(result)
+			#print ""
+
+			# if shortestResult[0] != start:
+			# 	shortestResult.insert(0, start)
+			# 	if shortestResult[0] != boatEdge[(i/2)]:
+			# 		print "added boat edge1"
+			# 		shortestResult.insert(1, boatEdge[(i/2)])
+			# else:
+			if shortestResult[0] != boatEdge[(i/2)]:
+				#print "added boat edge2"
+				shortestResult.insert(0, boatEdge[(i/2)])
 			
-			shortestResult.append(goalEdge[not (i%2)])
-			shortestResult.append(goal)
+			#if shortestResult[-1] != goalEdge[not (i%2)]:
+			#	shortestResult.append(goalEdge[not (i%2)])
+			#if shortestResult[-1] != goalEdge[not (i%2)]:
+			#	print "added goal edge"
+			#	shortestResult.append(goal)
 
 	# #pin = cropResultingPath(shortestResult)
 
-	route = [] # route containing utm coordinates
+	routePose = [] # route containing utm coordinates
+	routeIds = [getTrafficId(boatEdge)]
 
-	for j in range(len(shortestResult)):
-		pathCoordinate = shortestResult[j].split(',')
+	for i, item in enumerate(shortestResult):
+		pathCoordinate = map(float,item.split(','))
+		if i != 0:
+			routeIds.append(getTrafficId([shortestResult[i-1],item]))
+		
+		# todo give correct theta pose for next path segment
+		routePose.append(Pose2D(pathCoordinate[0], pathCoordinate[1], 0))
 
-		coordinateGPSnorthing = float(pathCoordinate[0])
-		coordinateGPSeasting = float(pathCoordinate[1])
-		route.append(Point(coordinateGPSnorthing,coordinateGPSeasting, 0))
+	routeIds.append(getTrafficId(goalEdge))
+	
+	routePose.insert(0, Pose2D(positionEasting, positionNorthing, 0))
+	routePose.append(Pose2D(request.goalEasting, request.goalNorthing, 0))
 
-		if debug:
-			print route[-1] # print last added gps coordinate
+	#print "Start: " + str(start)
+	#print "Route poses: " + str(routePose) # print last added gps coordinate
+	#print "Route ids: " + str(routeIds)
+	#print "End: " + str(goal)
 	
 	#os.system("rosrun map_server map_server " + project_path + "/config/amsterdam.yaml&")
 	#os.system("")
+
+	print "Route: " + str(routePose)
 
 	#z, w = orientation(utm_route)
 	#print "x:", utm_route[1][0] - 121000, "y:", utm_route[1][1] - 486500, "z:", z, "w:", w
 
 	if debug:
 		# add start and goal nodes
-		G.add_node(shortestResult[0], pos=(route[0].x, route[0].y))
-		G.add_node(shortestResult[-1], pos=(route[-1].x, route[-1].y))
+		#G.add_node(start, pos=(positionEasting, positionNorthing))
+		#G.add_node(goal, pos=(request.goalEasting, request.goalNorthing))
 
 		node_colors = []
 		for n in G.nodes():
-			if n in shortestResult:
-				if n == start or n == goal:
-					node_colors.append("red")
-					print "found goal would color red"
-				else:
-					node_colors.append("green")
+			if n == start:
+				node_colors.append("blue")
+				#print "found start"
+			elif n == goal:
+				node_colors.append("red")
+				#print "found goal"
 			else:
-				node_colors.append("white")
+				found = False
+				utmCoordinate = map(float, n.split(","))
+				for p in routePose:
+					#print str(p.x) + " " + str(utmCoordinate[0]) + " " + str(p.y) + " " + str(utmCoordinate[1])  
+					if(p.x == utmCoordinate[0] and p.y == utmCoordinate[1]):
+						node_colors.append("green")
+						found = True
+						break
+				if not found:
+					node_colors.append("white")	
+				
+			
 
 		pos = nx.get_node_attributes(G,'pos')
 		nx.draw_networkx_nodes(G, pos = pos, node_color = node_colors, node_size = 50)
 		nx.draw_networkx_edges(G, pos = pos)
 		plt.show()
 
-	return FindPathAmsterdamCanalsResponse(route)
+	# rospy.wait_for_service('map_cropper')
+    # try:
+    #     cropMapPoints = rospy.ServiceProxy('map_cropper', CropMapPoints)
+	# 	cropMapPointsResponse = cropMapPoints(routePose, routeIds)
+    #     print cropMapPointsResponse.
+    # except rospy.ServiceException, e:
+    #     print "Service call failed: %s"%e
+
+	return FindPathAmsterdamCanalsResponse(routePose, routeIds)
 
 def path_finder_server():
+	global positionEasting, positionNorthing
 	rospy.init_node('path_finder_server')
 	sub = rospy.Subscriber("/utm/fix", NavSatFix, gpsFixCallback)
 	rate = rospy.Rate(10)
-	while positionEasting == 0 and not rospy.is_shutdown():
-		rospy.loginfo("waiting fix")
-		rate.sleep()
+	if not test:
+		while positionEasting == 0 and not rospy.is_shutdown():
+			rospy.loginfo("waiting fix")
+			rate.sleep()
+	#else: 
+		#randomStartEdge = random.choice(G.edges())
+		#firstRandomStartNode = map(float,randomStartEdge[0].split(","))
+		#secondRandomStartNode = map(float,randomStartEdge[1].split(","))
+
+		#positionEasting = (firstRandomStartNode[0] + secondRandomStartNode[0]) / 2
+		#positionNorthing = (firstRandomStartNode[1] + secondRandomStartNode[1]) / 2
 
 	s = rospy.Service('find_path_amsterdam_canals', FindPathAmsterdamCanals, find_path)
 	print "Waiting for coordinates..."
 	rospy.spin()
 
-def test_path_finder():
+def debug_path_finder():
 	
 	sub = rospy.Subscriber("/utm/fix/", NavSatFix, gpsFixCallback)
 	s = rospy.Service('find_path_amsterdam_canals', FindPathAmsterdamCanals, find_path)
 
-	try:
-		service_client = rospy.ServiceProxy("find_path_amsterdam_canals", FindPathAmsterdamCanals)
-		randomGoal = map(float,random.choice(G.nodes()).split(","))
-		srv_response = service_client(randomGoal[0], randomGoal[1])
-		print "Success " + str(srv_response.pathCoordinates)
-	except rospy.ServiceException, e:
-		print "Service call failed: %s" % e
-	print "Finished testing"
-	rospy.spin()
+	service_client = rospy.ServiceProxy("find_path_amsterdam_canals", FindPathAmsterdamCanals)
+	rate = rospy.Rate(10)	
+	while not rospy.is_shutdown():
+		try:
+			randomEdge = random.choice(G.edges())
+			firstRandomNode = map(float,randomEdge[0].split(","))
+			secondRandomNode = map(float,randomEdge[1].split(","))
+
+			random_easting = firstRandomNode[0] #(firstRandomNode[0] + secondRandomNode[0]) / 2
+			random_northing = firstRandomNode[1] #(firstRandomNode[1] + secondRandomNode[1]) / 2
+
+			srv_response = service_client(random_easting, random_northing)
+			# srv_response = service_client(628532, 5805045)
+			print "Success " + str(srv_response.pathLocations) + " " + str(srv_response.pathIds)
+		except rospy.ServiceException, e:
+			print "Service call failed: %s" % e
+		rate.sleep()
+		print "Finished testing"
 
 def convertGPSStringToUTM(gpsString):
 	gpsPosition = map(float, gpsString.split(",", 1))
@@ -280,14 +312,14 @@ def construct_graph():
 			for connected in node.connected:
 				G.add_edge(node.id, connected, weight = (euclideanDistance(node.id,connected)))
 
-		v = []
 if __name__ == "__main__":
 	rospy.init_node('path_finder_server')
-	debug = rospy.get_param('~debug')
-	print debug
+	debug = rospy.get_param('~debug', False)
+	test = rospy.get_param('~test', False)
+	print str(debug) + " " + str(test)
 	construct_graph()
 	if debug:
-		test_path_finder()
+		debug_path_finder()
 	else:
 		path_finder_server()
 

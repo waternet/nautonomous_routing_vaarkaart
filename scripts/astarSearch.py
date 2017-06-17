@@ -36,7 +36,8 @@ def amount(first, second):
     for item in traffic["data"]:
         if(item["trafficlink_id"] == traffic_id[0]):
             return euclideanDistance(first, second) * (item["traffic"] / 4 + 1)
-    return 0;
+
+    return 0
 
 def euclideanDistance(start, end):
     startString = start.split(",")
@@ -118,7 +119,8 @@ def aStarSearch(G, problem, goal):
         for option in G.neighbors(node.state):
             #value = euclideanDistance(node.state, option)*1000
             # removed traffic cost temp. TODO : amount(option, node.state)
-            child = Node(option, node, ((node.pathCost + euclideanDistance(option, goal)))) #initialise node with actual distance, successor pathcost + entire path cost
+            
+            child = Node(option, node, ((node.pathCost + euclideanDistance(node.state, option)))) #initialise node with actual distance, successor pathcost + entire path cost
 
             foundExplored = False
             for closed_list_item in explored:

@@ -1,5 +1,7 @@
 float64 goalEasting
 float64 goalNorthing
+float64 testStartEasting
+float64 testStartNorthing
 ---
-geometry_msgs/Point[] pathCoordinates
-
+geometry_msgs/Pose2D[] pathLocations
+int32[] pathIds
