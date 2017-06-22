@@ -277,7 +277,7 @@ def debug_path_finder():
 			random_easting = firstRandomNode[0] #(firstRandomNode[0] + secondRandomNode[0]) / 2
 			random_northing = firstRandomNode[1] #(firstRandomNode[1] + secondRandomNode[1]) / 2
 
-			srv_response = service_client(random_easting, random_northing)
+			srv_response = service_client(random_easting, random_northing,0,0)
 			# srv_response = service_client(628532, 5805045)
 			print "Success " + str(srv_response.pathLocations) + " " + str(srv_response.pathIds)
 		except rospy.ServiceException, e:
