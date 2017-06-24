@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 
 from vertex import Vertex
 from geometry_msgs.msg import Pose2D
-from nautonomous_navigation_pathfinder.srv import *
+from nautonomous_routing_msgs.srv import *
 from astarSearch import *
 from orientation import orientation
 from sensor_msgs.msg import NavSatFix
@@ -238,7 +238,7 @@ def find_path(request):
     # except rospy.ServiceException, e:
     #     print "Service call failed: %s"%e
 
-	return FindPathAmsterdamCanalsResponse(routePose, routeIds)
+	return PathfinderVaarkaartResponse(routePose, routeIds)
 
 def path_finder_server():
 	global positionEasting, positionNorthing
@@ -257,16 +257,16 @@ def path_finder_server():
 		#positionEasting = (firstRandomStartNode[0] + secondRandomStartNode[0]) / 2
 		#positionNorthing = (firstRandomStartNode[1] + secondRandomStartNode[1]) / 2
 
-	s = rospy.Service('find_path_amsterdam_canals', FindPathAmsterdamCanals, find_path)
+	s = rospy.Service('find_path_amsterdam_canals', PathfinderVaarkaart, find_path)
 	print "Waiting for coordinates..."
 	rospy.spin()
 
 def debug_path_finder():
 	
 	sub = rospy.Subscriber("/utm/fix/", NavSatFix, gpsFixCallback)
-	s = rospy.Service('find_path_amsterdam_canals', FindPathAmsterdamCanals, find_path)
+	s = rospy.Service('find_path_amsterdam_canals', PathfinderVaarkaart, find_path)
 
-	service_client = rospy.ServiceProxy("find_path_amsterdam_canals", FindPathAmsterdamCanals)
+	service_client = rospy.ServiceProxy("find_path_amsterdam_canals", PathfinderVaarkaart)
 	rate = rospy.Rate(10)	
 	while not rospy.is_shutdown():
 		try:
