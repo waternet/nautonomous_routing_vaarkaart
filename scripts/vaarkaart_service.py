@@ -4,25 +4,25 @@ import rospy
 import sys
 
 from geometry_msgs.msg import Pose2D
-from nautonomous_routing_msgs.srv import Routing, RoutingResponse
+from nautonomous_routing_msgs.srv import Route, RouteResponse
 
 import astar_route
 import graph_helper
 import vaarkaart_visualizer
 
-routing_vaarkaart_service_namespace = "/routing/vaarkaart/request"
-pose_utm_fix_topic = "/pose/utm/fix"
+routing_vaarkaart_service_namespace = "route_service"
 
 vaarkaart_graph = None
 debug_visualization = False
 
-def vaarkaart_routing_service_server(routing_graph, debug):
-	global vaarkaart_graph, debug_visualization
+def vaarkaart_routing_service_server(routing_graph):
+	global vaarkaart_graph
 	vaarkaart_graph = routing_graph
-	debug_visualization = debug
+
+	debug_visualization = rospy.get_param('~debug', False)
 
 	# Setup vaarkaart routing service
-	vaarkaart_routing_service_server = rospy.Service(routing_vaarkaart_service_namespace, Routing, routing_vaarkaart_service)
+	vaarkaart_routing_service_server = rospy.Service(routing_vaarkaart_service_namespace, Route, routing_vaarkaart_service)
 
 # Find shortest route
 def find_shortest_route(start_edge, destination_edge):
@@ -77,7 +77,7 @@ def routing_vaarkaart_service(request):
 	if debug_visualization:
 		vaarkaart_visualizer.visualize_vaarkaart_route(vaarkaart_graph, start_coordinate, destination_coordinate, route_poses)
 
-	return RoutingResponse(route_poses)
+	return RouteResponse(route_poses)
 
 def vaarkaart_routing_service_client():
 	global vaarkaart_graph
@@ -85,7 +85,7 @@ def vaarkaart_routing_service_client():
 	rospy.wait_for_service(routing_vaarkaart_service_namespace)
 
 	# Setup vaarkaart routing client
-	vaarkaart_routing_service_client = rospy.ServiceProxy(routing_vaarkaart_service_namespace, Routing)
+	vaarkaart_routing_service_client = rospy.ServiceProxy(routing_vaarkaart_service_namespace, Route)
 
 	# Try to make a request to the vaarkaart routing service with a randomly chosen start and destination position.
 	try:
