@@ -17,3 +17,6 @@ def convert_GPS_array_to_UTM(gps_array):
 		result.append(convert_GPS_string_to_UTM(gps_string)[0])
 
 	return result
+
+def map_float_split(value):
+	return map(float, value.split(","))

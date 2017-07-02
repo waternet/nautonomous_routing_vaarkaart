@@ -12,7 +12,7 @@ import vaarkaart_vertex
 project_path = os.path.abspath(os.path.join(os.path.split(__file__)[0], os.pardir))
 
 vaarkaart_traffic_url = "https://grachten.waternet.nl/api/v2/trafficdata"
-vaarkaart_intersection_url = project_path + '/data/intersections.json'
+vaarkaart_intersection_url = project_path + '/../data/intersections.json'
 
 vaarkaart_graph = None
 vaarkaart_vertices = []
