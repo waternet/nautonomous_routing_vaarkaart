@@ -27,5 +27,8 @@ def vaarkaart_routing_service_client(vaarkaart_graph):
 		print "Success vaarkaart routing service client response: "
 		print vaarkaart_routing_service_response.route
 
+		print "Size route: " + len(vaarkaart_routing_service_response.route)
+		print "Size edges: " + len(vaarkaart_routing_service_response.route_ids) 
+
 	except rospy.ServiceException, e:
 		print "Service call for vaarkaart routing failed: %s" % e
