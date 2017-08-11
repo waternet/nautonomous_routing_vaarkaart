@@ -10,15 +10,19 @@ def is_goal_state(current_node, goal_node):
 # Construct the route based on the node parent chain.
 def construct_route(node):
     route = []
+    edge_ids = []
     route_cost = node.route_cost
 
     # While there is a node left.
     while(node is not None):
         
         route.insert(0, node.vertex)
+        if node.edge != None:
+            edge_ids.insert(0, node.edge)
+
         node = node.parent
     
-    return route, route_cost
+    return route, edge_ids, route_cost
 
 # Check if the node is in the explored node list.
 def is_explored_node(current_node, explored_nodes):
@@ -46,7 +50,7 @@ def is_unexplored_node(current_node, goal_node, unexplored_nodes):
 # Find the route using the waternet_graph, 
 def astar_search(waternet_graph, start_vertex, goal_vertex):
 
-    current_node = AStarNode(start_vertex, None, 0)
+    current_node = AStarNode(start_vertex, None, None, 0)
 
     # Check if the start is the goal state
     if is_goal_state(current_node, goal_vertex):
@@ -73,7 +77,10 @@ def astar_search(waternet_graph, start_vertex, goal_vertex):
         for current_neighbour, edge_id in waternet_graph.neighbours(current_node.vertex):
             #value = graph_helper.euclidean_distance(node.state, current_neighbour)*1000
             current_edge = waternet_graph.edge(edge_id)
-            current_neighbour = AStarNode(current_neighbour, current_node, (current_node.route_cost + current_node.vertex.euclidean_distance(current_neighbour) * current_edge.cost_function())) #initialise node with actual distance, successor pathcost + entire path cost
+
+            if isinstance(edge_id, basestring):
+                edge_id = int(edge_id.split("_")[0])
+            current_neighbour = AStarNode(current_neighbour, edge_id, current_node, (current_node.route_cost + current_node.vertex.euclidean_distance(current_neighbour) * current_edge.cost_function())) #initialise node with actual distance, successor pathcost + entire path cost
             
             # Check if the neighbour is in the explored explored nodes
             if is_explored_node(current_neighbour, explored_nodes):

@@ -36,7 +36,7 @@ class VaarkaartService:
 		search_graph = graph_adapter.create_search_graph(self.vaarkaart_graph, start_edge, start_vertex, destination_edge, destination_vertex)
 		
 		# Temporarily variables to remember the shortest route
-		route, route_cost = astar_route.astar_search(search_graph, start_vertex, destination_vertex)
+		route, route_ids, route_cost = astar_route.astar_search(search_graph, start_vertex, destination_vertex)
 
 		# Create UTM route from astar route
 		route_poses = []
@@ -44,10 +44,10 @@ class VaarkaartService:
 		for vertex in route:
 			route_poses.append(vertex.to_Pose2D())
 
-		# Add the start and destination to the route.
-		start_pose = Pose2D(request.start.x, request.start.y, 0)
-		if start_pose not in route_poses:
-			route_poses.insert(0, start_pose)
+		# Add the start and destination to the route. (unnecessary why would you navigate to a position you are already are.)
+		# start_pose = Pose2D(request.start.x, request.start.y, 0)
+		# if start_pose not in route_poses:
+		# 	route_poses.insert(0, start_pose)
 		
 		destination_pose = Pose2D(request.destination.x, request.destination.y, 0)
 		if destination_pose not in route_poses:
@@ -57,5 +57,7 @@ class VaarkaartService:
 		if self.debug_visualization:
 			vaarkaart_visualizer.visualize_route(search_graph, start_vertex, destination_vertex, route_poses)
 
-		return RouteResponse(route_poses)
+
+		print "Response: " + str(route_poses) + " " + str(route_ids)	
+		return RouteResponse(route_poses, route_ids)
 
